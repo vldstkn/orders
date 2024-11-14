@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option go_package = "orders/common/orders";
+
+service Account {
+  rpc GetProfile(GetPublicProfileRequest) returns (GetPublicProfileResponse);
+}
+
+message User {
+  int64 UserID = 1;
+  int64 Email = 2;
+  string Name = 3;
+  string Role = 4;
+  int32 NumberCompletedOrders = 5;
+}
+
+message GetPublicProfileRequest {
+  string email = 1;
+}
+
+message GetPublicProfileResponse {
+  User user = 1;
+}
+
