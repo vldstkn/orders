@@ -1,67 +1,52 @@
-package handlers
+package http
 
 import (
 	"fmt"
 	"net/http"
 	"orders/internal/di"
-	"orders/internal/handlers/http/payload"
-	"orders/pkg/req"
-	"orders/pkg/res"
 )
 
-type AccountHandler struct {
-	AccountService di.IAccountService
+type AccountHttpHandler struct {
+	ApiService di.ApiService
 }
 
-type AccountHandlerDeps struct {
-	AccountService di.IAccountService
-}
-
-func NewAccountHandler(router *http.ServeMux, deps AccountHandlerDeps) {
-	handler := &AccountHandler{
-		AccountService: deps.AccountService,
+func NewAccountHttpHandler(router *http.ServeMux, apiService di.ApiService) {
+	handler := &AccountHttpHandler{
+		ApiService: apiService,
 	}
 	router.HandleFunc("POST /auth/register", handler.Register())
 	router.HandleFunc("POST /auth/login", handler.Login())
-	router.HandleFunc("GET /login/access_token", handler.GetPublicProfile())
+	router.HandleFunc("GET /auth/login/access_token", handler.GetNewTokens())
 	router.HandleFunc("GET /user/{id}", handler.GetPublicProfile())
+	router.HandleFunc("POST /account/change_role", handler.ChangeRole())
 }
 
-func (handler *AccountHandler) Register() http.HandlerFunc {
+func (handler *AccountHttpHandler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, err := req.HandleBody[payload.AccountRegisterRequest](&w, r)
-
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-			return
-		}
-
-		email, err := handler.AccountService.Register(body.Email, body.Password)
-
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		}
-
-		res.Json(w, payload.AccountRegisterResponse{
-			Email: email,
-		}, http.StatusCreated)
+		fmt.Println("Register")
 	}
 }
 
-func (handler *AccountHandler) Login() http.HandlerFunc {
+func (handler *AccountHttpHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Login!")
+		fmt.Println("Login")
 	}
 }
 
-func (handler *AccountHandler) GetPublicProfile() http.HandlerFunc {
+func (handler *AccountHttpHandler) GetPublicProfile() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("GetPublicProfile!")
+		fmt.Println("GetPublicProfile")
 	}
 }
 
-func (handler *AccountHandler) GetNewTokens() http.HandlerFunc {
+func (handler *AccountHttpHandler) GetNewTokens() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("GetNewTokens!")
+		fmt.Println("GetNewTokens")
+	}
+}
+
+func (handler *AccountHttpHandler) ChangeRole() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("GetNewTokens")
 	}
 }
