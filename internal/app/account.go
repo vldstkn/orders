@@ -1,9 +1,12 @@
 package app
 
 import (
+	"fmt"
+	"google.golang.org/grpc"
+	"net"
 	"orders/internal/configs"
-	"orders/internal/repositories"
-	"orders/internal/services"
+	handlers "orders/internal/handlers/grpc"
+	pb "orders/pkg/api/account"
 	"orders/pkg/db"
 )
 
@@ -23,10 +26,18 @@ func NewAccountApp() *AccountApp {
 }
 
 func (app *AccountApp) Run() {
-	accountRepository := repositories.NewAccountRepository(app.DB)
-	accountService := services.NewAccountService(services.AccountServiceDeps{
-		AccountRepository: accountRepository,
-	})
-	_ = accountService
+	//accountRepository := repositories.NewAccountRepository(app.DB)
+	//accountService := services.NewAccountService(services.AccountServiceDeps{
+	//	AccountRepository: accountRepository,
+	//})
+	accountHandler := handlers.NewAccountGrpcHandler()
+	server := grpc.NewServer()
+	pb.RegisterAccountServer(server, accountHandler)
 
+	l, err := net.Listen("tcp", ":9876")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Account Run :9876")
+	server.Serve(l)
 }

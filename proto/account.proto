@@ -1,24 +1,51 @@
 syntax = "proto3";
 
-option go_package = "orders/common/orders";
+option go_package = "orders/common/pb";
 
 service Account {
-  rpc GetProfile(GetPublicProfileRequest) returns (GetPublicProfileResponse);
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
 }
 
-message User {
-  int64 UserID = 1;
+message Offering{
+ int64 Id = 1;
+ string Status = 2;
+ string Title = 3;
+ string Description = 4;
+ int32 Price = 5;
+ int64 ContractorId = 6;
+}
+
+
+message PublicUserProfile {
+  int64 Id = 1;
   int64 Email = 2;
   string Name = 3;
   string Role = 4;
-  int32 NumberCompletedOrders = 5;
+  float Rating = 5;
+  int32 NumberCompletedOrders = 6;
+  repeated Offering Offerings = 7;
 }
 
-message GetPublicProfileRequest {
-  string email = 1;
+message LoginRequest{
+  string Email = 1;
+  string Password = 2;
 }
 
-message GetPublicProfileResponse {
-  User user = 1;
+message LoginResponse{
+  string AccessToken = 1;
+  int64 Id = 2;
 }
+
+message RegisterRequest{
+  string Email = 1;
+  string Password = 2;
+  string Name = 3;
+}
+
+message RegisterResponse{
+  string AccessToken = 1;
+  int64 Id = 2;
+}
+
 
