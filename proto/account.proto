@@ -34,7 +34,8 @@ message LoginRequest{
 
 message LoginResponse{
   string AccessToken = 1;
-  int64 Id = 2;
+  string RefreshToken = 2;
+  int64 Id = 3;
 }
 
 message RegisterRequest{
@@ -45,7 +46,8 @@ message RegisterRequest{
 
 message RegisterResponse{
   string AccessToken = 1;
-  int64 Id = 2;
+  string RefreshToken = 2;
+  int64 Id = 3;
 }
 
 

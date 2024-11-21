@@ -1,13 +1,18 @@
 package di
 
-import "orders/internal/domain"
+import (
+	"orders/internal/domain"
+	"orders/pkg/jwt"
+	"time"
+)
 
 type IAccountService interface {
-	Register(email, password string) (string, error)
-	Login(email, password string) (string, error)
-	FindByEmail(email string) *domain.User
+	Register(email, password, name string) (int, error)
+	Login(email, password string) (int, error)
+	IssueTokens(secret string, data jwt.JWTData,
+		expirationTimeA, expirationTimeR time.Time) (string, string, error)
 }
 type IAccountRepository interface {
-	Create(user *domain.User) (*domain.User, error)
+	Create(user *domain.User) (int, error)
 	FindByEmail(email string) *domain.User
 }

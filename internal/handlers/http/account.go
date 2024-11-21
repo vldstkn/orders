@@ -8,6 +8,7 @@ import (
 	pb "orders/pkg/api/account"
 	"orders/pkg/req"
 	"orders/pkg/res"
+	"time"
 )
 
 type AccountHttpHandler struct {
@@ -34,15 +35,23 @@ func (handler *AccountHttpHandler) Register() http.HandlerFunc {
 		body, err := req.HandleBody[payload.AccountRegisterRequest](&w, r)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
 		}
+
 		grpcRes, err := handler.AccountClient.Register(context.Background(), &pb.RegisterRequest{
 			Email:    body.Email,
 			Password: body.Password,
 			Name:     body.Name,
 		})
 
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		handler.ApiService.AddCookie(w, "refresh_token", grpcRes.RefreshToken, time.Now().AddDate(0, 0, 2))
 		res.Json(w, payload.AccountRegisterResponse{
-			Email:       grpcRes.AccessToken,
+			Id:          int(grpcRes.Id),
 			AccessToken: grpcRes.AccessToken,
 		}, 201)
 	}
@@ -50,7 +59,29 @@ func (handler *AccountHttpHandler) Register() http.HandlerFunc {
 
 func (handler *AccountHttpHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := req.HandleBody[payload.AccountLoginRequest](&w, r)
 
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		grpcRes, err := handler.AccountClient.Login(context.Background(), &pb.LoginRequest{
+			Email:    body.Email,
+			Password: body.Password,
+		})
+
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		handler.ApiService.AddCookie(w, "refresh_token", grpcRes.RefreshToken, time.Now().AddDate(0, 0, 2))
+
+		res.Json(w, payload.AccountLoginResponse{
+			Id:          int(grpcRes.Id),
+			AccessToken: grpcRes.AccessToken,
+		}, http.StatusCreated)
 	}
 }
 

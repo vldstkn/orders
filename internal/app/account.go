@@ -1,11 +1,13 @@
 package app
 
 import (
-	"fmt"
 	"google.golang.org/grpc"
+	"log/slog"
 	"net"
 	"orders/internal/configs"
 	handlers "orders/internal/handlers/grpc"
+	"orders/internal/repositories"
+	"orders/internal/services"
 	pb "orders/pkg/api/account"
 	"orders/pkg/db"
 )
@@ -13,31 +15,44 @@ import (
 type AccountApp struct {
 	Config *configs.Config
 	DB     *db.DB
+	Logger *slog.Logger
 }
 
-func NewAccountApp() *AccountApp {
-	conf := configs.LoadConfig()
-	database := db.NewDb(conf.Dsn)
+type AccountAppDeps struct {
+	Config *configs.Config
+	DB     *db.DB
+	Logger *slog.Logger
+}
 
+func NewAccountApp(deps *AccountAppDeps) *AccountApp {
 	return &AccountApp{
-		DB:     database,
-		Config: conf,
+		DB:     deps.DB,
+		Config: deps.Config,
+		Logger: deps.Logger,
 	}
 }
 
 func (app *AccountApp) Run() {
-	//accountRepository := repositories.NewAccountRepository(app.DB)
-	//accountService := services.NewAccountService(services.AccountServiceDeps{
-	//	AccountRepository: accountRepository,
-	//})
-	accountHandler := handlers.NewAccountGrpcHandler()
-	server := grpc.NewServer()
-	pb.RegisterAccountServer(server, accountHandler)
+	accountRepository := repositories.NewAccountRepository(app.DB)
+	accountService := services.NewAccountService(services.AccountServiceDeps{
+		AccountRepository: accountRepository,
+	})
+	var opts []grpc.ServerOption
+	accountHandler := handlers.NewAccountGrpcHandler(&handlers.AccountGrpcHandlerDeps{
+		AccountService: accountService,
+	})
 
-	l, err := net.Listen("tcp", ":9876")
+	l, err := net.Listen("tcp", app.Config.AccountAddress)
+	server := grpc.NewServer(opts...)
+	pb.RegisterAccountServer(server, accountHandler)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Account Run :9876")
+
+	app.Logger.Info("Microservice Account starts",
+		slog.String("MODE", app.Config.Mode),
+		slog.String("ADDRESS", app.Config.AccountAddress),
+		slog.String("DNS", app.Config.Dsn),
+	)
 	server.Serve(l)
 }

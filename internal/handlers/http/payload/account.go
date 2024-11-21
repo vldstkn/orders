@@ -11,7 +11,7 @@ type AccountRegisterRequest struct {
 }
 
 type AccountRegisterResponse struct {
-	Email       string `json:"email"`
+	Id          int    `json:"id"`
 	AccessToken string `json:"access_token"`
 }
 
@@ -23,7 +23,7 @@ type AccountLoginRequest struct {
 }
 
 type AccountLoginResponse struct {
-	Email       string `json:"email"`
+	Id          int    `json:"id"`
 	AccessToken string `json:"access_token"`
 }
 

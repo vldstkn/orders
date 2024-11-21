@@ -20,12 +20,11 @@ type ApiAppDeps struct {
 }
 
 type ApiApp struct {
-	httpRouter    *http.ServeMux
-	httpServer    *http.Server
-	Config        *configs.Config
-	DB            *db.DB
-	Logger        *slog.Logger
-	AccountClient pb.AccountClient
+	httpRouter *http.ServeMux
+	httpServer *http.Server
+	Config     *configs.Config
+	DB         *db.DB
+	Logger     *slog.Logger
 }
 
 func NewApiApp(deps *ApiAppDeps) *ApiApp {
@@ -37,40 +36,50 @@ func NewApiApp(deps *ApiAppDeps) *ApiApp {
 	)
 
 	server := &http.Server{
-		Addr:    deps.Config.Address,
+		Addr:    deps.Config.ApiAddress,
 		Handler: stack(router),
 	}
-	opt := grpc.WithTransportCredentials(insecure.NewCredentials())
-	conn, err := grpc.NewClient("localhost:9876", opt)
-	if err != nil {
-		panic(err)
-	}
-	defer conn.Close()
-	accountClient := pb.NewAccountClient(conn)
 
 	return &ApiApp{
-		DB:            deps.DB,
-		httpRouter:    router,
-		httpServer:    server,
-		Config:        deps.Config,
-		Logger:        deps.Logger,
-		AccountClient: accountClient,
+		DB:         deps.DB,
+		httpRouter: router,
+		httpServer: server,
+		Config:     deps.Config,
+		Logger:     deps.Logger,
 	}
 }
 
 func (app *ApiApp) Run() {
-	apiService := services.NewApiService()
+	apiService := services.NewApiService(app.Config.JWTSecret)
+
+	// Grpc Clients
+	accountConn, err := newClientConn(app.Config.AccountAddress)
+	if err != nil {
+		panic(err)
+	}
+	accountClient := pb.NewAccountClient(accountConn)
 
 	// http handlers
-	handlers.NewAccountHttpHandler(app.httpRouter, app.AccountClient, apiService)
+	handlers.NewAccountHttpHandler(app.httpRouter, accountClient, apiService)
 	handlers.NewOrdersHttpHandler(app.httpRouter)
 	handlers.NewOfferingsHttpHandler(app.httpRouter)
 
-	app.Logger.Info("Server starts",
+	app.Logger.Info("Microservice API starts",
 		slog.String("MODE", app.Config.Mode),
-		slog.String("ADDRESS", app.Config.Address),
+		slog.String("ADDRESS", app.Config.ApiAddress),
 		slog.String("DNS", app.Config.Dsn),
 	)
 
 	app.httpServer.ListenAndServe()
+
+}
+
+func newClientConn(address string) (*grpc.ClientConn, error) {
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(address, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
 }
