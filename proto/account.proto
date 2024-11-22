@@ -5,6 +5,8 @@ option go_package = "orders/common/pb";
 service Account {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
+  rpc GetNewTokens(GetNewTokensRequest) returns (GetNewTokensResponse);
+  rpc UpdateById(UpdateUserRequest) returns (UpdateUserResponse);
 }
 
 message Offering{
@@ -50,4 +52,22 @@ message RegisterResponse{
   int64 Id = 3;
 }
 
+message GetNewTokensRequest{
+  string refreshToken = 1;
+}
 
+message GetNewTokensResponse{
+  string accessToken = 1;
+  string refreshToken = 2;
+}
+
+message UpdateUserRequest{
+  int64 id = 1;
+  optional string Name = 2;
+  optional string Email = 3;
+  optional string Password = 4;
+  optional string NewPassword = 5;
+}
+message UpdateUserResponse {
+  bool isSuccess = 1;
+}

@@ -19,8 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Account_Register_FullMethodName = "/Account/Register"
-	Account_Login_FullMethodName    = "/Account/Login"
+	Account_Register_FullMethodName     = "/Account/Register"
+	Account_Login_FullMethodName        = "/Account/Login"
+	Account_GetNewTokens_FullMethodName = "/Account/GetNewTokens"
+	Account_UpdateById_FullMethodName   = "/Account/UpdateById"
 )
 
 // AccountClient is the client API for Account service.
@@ -29,6 +31,8 @@ const (
 type AccountClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	GetNewTokens(ctx context.Context, in *GetNewTokensRequest, opts ...grpc.CallOption) (*GetNewTokensResponse, error)
+	UpdateById(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
 }
 
 type accountClient struct {
@@ -59,12 +63,34 @@ func (c *accountClient) Login(ctx context.Context, in *LoginRequest, opts ...grp
 	return out, nil
 }
 
+func (c *accountClient) GetNewTokens(ctx context.Context, in *GetNewTokensRequest, opts ...grpc.CallOption) (*GetNewTokensResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetNewTokensResponse)
+	err := c.cc.Invoke(ctx, Account_GetNewTokens_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *accountClient) UpdateById(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateUserResponse)
+	err := c.cc.Invoke(ctx, Account_UpdateById_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AccountServer is the server API for Account service.
 // All implementations must embed UnimplementedAccountServer
 // for forward compatibility.
 type AccountServer interface {
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
+	GetNewTokens(context.Context, *GetNewTokensRequest) (*GetNewTokensResponse, error)
+	UpdateById(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 	mustEmbedUnimplementedAccountServer()
 }
 
@@ -80,6 +106,12 @@ func (UnimplementedAccountServer) Register(context.Context, *RegisterRequest) (*
 }
 func (UnimplementedAccountServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+}
+func (UnimplementedAccountServer) GetNewTokens(context.Context, *GetNewTokensRequest) (*GetNewTokensResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNewTokens not implemented")
+}
+func (UnimplementedAccountServer) UpdateById(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateById not implemented")
 }
 func (UnimplementedAccountServer) mustEmbedUnimplementedAccountServer() {}
 func (UnimplementedAccountServer) testEmbeddedByValue()                 {}
@@ -138,6 +170,42 @@ func _Account_Login_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Account_GetNewTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNewTokensRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServer).GetNewTokens(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Account_GetNewTokens_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServer).GetNewTokens(ctx, req.(*GetNewTokensRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Account_UpdateById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServer).UpdateById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Account_UpdateById_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServer).UpdateById(ctx, req.(*UpdateUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Account_ServiceDesc is the grpc.ServiceDesc for Account service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +220,14 @@ var Account_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Login",
 			Handler:    _Account_Login_Handler,
+		},
+		{
+			MethodName: "GetNewTokens",
+			Handler:    _Account_GetNewTokens_Handler,
+		},
+		{
+			MethodName: "UpdateById",
+			Handler:    _Account_UpdateById_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

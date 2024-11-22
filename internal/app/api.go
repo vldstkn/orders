@@ -60,7 +60,11 @@ func (app *ApiApp) Run() {
 	accountClient := pb.NewAccountClient(accountConn)
 
 	// http handlers
-	handlers.NewAccountHttpHandler(app.httpRouter, accountClient, apiService)
+	handlers.NewAccountHttpHandler(app.httpRouter, &handlers.AccountHttpHandlerDeps{
+		Config:        app.Config,
+		ApiService:    apiService,
+		AccountClient: accountClient,
+	})
 	handlers.NewOrdersHttpHandler(app.httpRouter)
 	handlers.NewOfferingsHttpHandler(app.httpRouter)
 

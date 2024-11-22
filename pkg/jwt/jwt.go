@@ -49,8 +49,8 @@ func (j *JWT) Parse(token string) (bool, *JWTData) {
 		return false, nil
 	}
 
-	id := t.Claims.(jwt.MapClaims)["Id"].(int)
+	id := t.Claims.(jwt.MapClaims)["Id"].(float64)
 	return t.Valid, &JWTData{
-		Id: id,
+		Id: int(id),
 	}
 }

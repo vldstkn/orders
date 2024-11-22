@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"orders/internal/di"
 	pb "orders/pkg/api/account"
 	"orders/pkg/jwt"
@@ -72,5 +73,32 @@ func (handler *AccountHandler) Login(ctx context.Context, req *pb.LoginRequest) 
 		Id:           int64(id),
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (handler *AccountHandler) GetNewTokens(ctx context.Context, req *pb.GetNewTokensRequest) (*pb.GetNewTokensResponse, error) {
+	isValid, data := jwt.NewJWT(handler.JWTSecret).Parse(req.RefreshToken)
+	if !isValid {
+		return nil, errors.New("token is not valid")
+	}
+	timeNow := time.Now()
+	accessToken, refreshToken, err := handler.AccountService.IssueTokens(handler.JWTSecret, *data,
+		timeNow.Add(time.Hour*2),
+		timeNow.AddDate(0, 0, 3))
+
+	if err != nil {
+		return nil, errors.New("internal server error")
+	}
+
+	return &pb.GetNewTokensResponse{
+		RefreshToken: refreshToken,
+		AccessToken:  accessToken,
+	}, nil
+}
+
+func (handler *AccountHandler) UpdateById(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
+	// TODO:
+	return &pb.UpdateUserResponse{
+		IsSuccess: false,
 	}, nil
 }
